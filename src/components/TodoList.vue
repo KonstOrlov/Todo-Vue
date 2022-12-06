@@ -1,22 +1,22 @@
-<template>
-  <div>
+<template >
+  <div >
     <input type="text"
            class="todo-input"
            placeholder="What needs to be done"
            v-model="newTodo"
            @keyup.enter="addTodo"
     >
-    <div v-show="!todos.length" class="todos-empty">Todo List empty</div>
-    <div v-for="(todo, index) in todosFiltered" :key="todo.id" class="todo-item">
-      <div class="todo-item-left">
-        <input type="checkbox" v-model="todo.completed">
+    <div v-show="!todos.length" class="todos-empty" >Todo List empty</div >
+    <div v-for="(todo) in todosFiltered" :key="todo.id" class="todo-item" >
+      <div class="todo-item-left" >
+        <input type="checkbox" v-model="todo.completed" >
         <div v-if="!todo.editing"
              @dblclick="editTodo(todo)"
              class="todo-item-label"
              :class="{ completed : todo.completed }"
         >
           {{ todo.title }}
-        </div>
+        </div >
         <input v-else
                v-focus
                class="todo-item-edit"
@@ -24,38 +24,38 @@
                v-model="todo.title"
                @blur="doneEdit(todo)"
                @keyup.enter="doneEdit(todo)"
-               @keyup.esc="cancelEdit(todo)">
-      </div>
-      <div class="remove-item" @click="removeTodo(index)">
+               @keyup.esc="cancelEdit(todo)" >
+      </div >
+      <div class="remove-item" @click="removeTodo(todo.id)" >
         &times;
-      </div>
-    </div>
+      </div >
+    </div >
 
-    <div class="extra-container">
-      <div>
-        <label>
+    <div class="extra-container" >
+      <div >
+        <label >
           <input type="checkbox"
                  :checked="!anyRemaining"
                  @change="checkAllTodos"
           >
           Check All
-        </label>
-      </div>
-      <div>{{ remaining }} items left</div>
-    </div>
+        </label >
+      </div >
+      <div >{{ remaining }} items left</div >
+    </div >
 
-    <div class="extra-container">
-      <div class="filters-container">
-        <button :class="{ active: filter === 'all' }" @click="filter = 'all'">All</button>
-        <button :class="{ active: filter === 'active' }" @click="filter = 'active'">Active</button>
-        <button :class="{ active: filter === 'completed' }" @click="filter = 'completed'">Completed</button>
-      </div>
+    <div class="extra-container" >
+      <div class="filters-container" >
+        <button :class="{ active: filter === 'all' }" @click="filter = 'all'" >All</button >
+        <button :class="{ active: filter === 'active' }" @click="filter = 'active'" >Active</button >
+        <button :class="{ active: filter === 'completed' }" @click="filter = 'completed'" >Completed</button >
+      </div >
 
-      <button v-if="showClearCompletedButton" @click="clearCompleted">Clear Completed</button>
+      <button v-if="showClearCompletedButton" @click="clearCompleted" >Clear Completed</button >
 
-    </div>
-  </div>
-</template>
+    </div >
+  </div >
+</template >
 
 <script >
 export default {
@@ -66,7 +66,7 @@ export default {
       idForTodo: 0,
       beforeEditCache: '',
       filter: 'all',
-      todos: []
+      todos: JSON.parse(localStorage.getItem('todos')) || []
     }
   },
   computed: {
@@ -103,18 +103,21 @@ export default {
         return;
       }
 
-      this.todos.push({
+      const newTodo = {
         id: this.idForTodo,
         title: this.newTodo,
         completed: false,
         editing: false
-      })
+      }
+      this.todos.push(newTodo)
+      this.addTodoInLocalStorage("todos", newTodo)
 
       this.newTodo = '';
       this.idForTodo++
     },
-    removeTodo(index) {
-      this.todos.splice(index, 1)
+    removeTodo(id) {
+      this.todos = this.todos.filter(todo => todo.id !== id);
+      this.deleteTodoFromLocalStorage("todos", id)
     },
     editTodo(todo) {
       this.beforeEditCache = todo.title
@@ -136,101 +139,119 @@ export default {
     },
     clearCompleted() {
       this.todos = this.todos.filter(todo => !todo.completed)
+    },
+    addTodoInLocalStorage(key, value) {
+      const new_data = value;
+      if (localStorage.getItem(key) === null) {
+        localStorage.setItem(key, "[]");
+      }
+      const data = JSON.parse(localStorage.getItem(key));
+      data.push(new_data);
+
+      localStorage.setItem(key, JSON.stringify(data));
+    },
+    deleteTodoFromLocalStorage(key, id) {
+      if (localStorage.getItem(key) !== null) {
+        const data = JSON.parse(localStorage.getItem(key));
+        const new_data = data.filter(todo => todo.id !== id);
+        localStorage.setItem(key, JSON.stringify(new_data));
+      }
     }
   }
 }
 </script >
 
-<style scoped>
-  .todos-empty {
-    display: flex;
-    justify-content: center;
-  }
+<style scoped >
+.todos-empty {
+  display: flex;
+  justify-content: center;
+}
 
-  .todo-input {
-    width: 100%;
-    padding: 10px 18px;
-    margin-bottom: 16px;
-    font-size: 18px;
-    display: flex;
-    justify-content: space-between;
-  }
+.todo-input {
+  width: 100%;
+  padding: 10px 18px;
+  margin-bottom: 16px;
+  font-size: 18px;
+  display: flex;
+  justify-content: space-between;
+}
 
-  .todo-item {
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    animation-duration: 0.3s;
-  }
+.todo-item {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation-duration: 0.3s;
+}
 
-  .todo-item-left {
-    display: flex;
-    align-items: center;
-  }
+.todo-item-left {
+  display: flex;
+  align-items: center;
+}
 
-  .todo-item-label {
-    padding: 10px;
-    border: 1px solid white;
-    margin-left: 12px;
-  }
+.todo-item-label {
+  padding: 10px;
+  border: 1px solid white;
+  margin-left: 12px;
+}
 
-  .todo-item-edit {
-    font-size: 24px;
-    color: #2c3e50;
-    margin-left: 12px;
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-  }
+.todo-item-edit {
+  font-size: 24px;
+  color: #2c3e50;
+  margin-left: 12px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
 
-  .todo-item-edit:hover {
-    outline: none;
-  }
+.todo-item-edit:hover {
+  outline: none;
+}
 
-  .remove-item {
-    cursor: pointer;
-    margin-left: 14px;
-  }
+.remove-item {
+  cursor: pointer;
+  margin-left: 14px;
+}
 
-  .remove-item:hover {
-    color: black;
-  }
+.remove-item:hover {
+  color: black;
+}
 
-  .completed {
-    text-decoration: line-through;
-    color: gray;
-  }
+.completed {
+  text-decoration: line-through;
+  color: gray;
+}
 
-  .extra-container{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 16px;
-    border-top: 1px solid lightgrey;
-    padding-top: 14px;
-    margin-bottom: 14px;
-  }
+.extra-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 16px;
+  border-top: 1px solid lightgrey;
+  padding-top: 14px;
+  margin-bottom: 14px;
+}
 
-  .active {
-    background-color: lightgreen;
-  }
+.active {
+  background-color: lightgreen;
+}
 
-  .filters-container{
-    display: flex;
-    gap: 10px;
-  }
-  button {
-    font-size: 14px;
-    background-color: white;
-    appearance: none;
-  }
+.filters-container {
+  display: flex;
+  gap: 10px;
+}
 
-  button:hover {
-    background: lightgreen;
-  }
+button {
+  font-size: 14px;
+  background-color: white;
+  appearance: none;
+}
 
-  button:focus {
-    outline: none;
-  }
+button:hover {
+  background: lightgreen;
+}
+
+button:focus {
+  outline: none;
+}
 </style >
