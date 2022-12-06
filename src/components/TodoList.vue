@@ -9,7 +9,7 @@
     <div v-show="!todos.length" class="todos-empty" >Todo List empty</div >
     <div v-for="(todo) in todosFiltered" :key="todo.id" class="todo-item" >
       <div class="todo-item-left" >
-        <input type="checkbox" v-model="todo.completed" >
+        <input type="checkbox" v-model="todo.completed" @change="changeTodoInLocalStorage(todo.id, todo)" >
         <div v-if="!todo.editing"
              @dblclick="editTodo(todo)"
              class="todo-item-label"
@@ -128,7 +128,7 @@ export default {
         todo.title = this.beforeEditCache;
       }
       todo.editing = false;
-
+      this.changeTodoInLocalStorage(todo.id, todo)
     },
     cancelEdit(todo) {
       todo.title = this.beforeEditCache;
@@ -139,6 +139,7 @@ export default {
     },
     clearCompleted() {
       this.todos = this.todos.filter(todo => !todo.completed)
+      localStorage.setItem('todos', JSON.stringify(this.todos));
     },
     addTodoInLocalStorage(key, value) {
       const new_data = value;
@@ -156,6 +157,14 @@ export default {
         const new_data = data.filter(todo => todo.id !== id);
         localStorage.setItem(key, JSON.stringify(new_data));
       }
+    },
+    changeTodoInLocalStorage(id, value) {
+      const data = JSON.parse(localStorage.getItem('todos'));
+      const newData = []
+      data.forEach(todo => {
+        todo.id === id ? newData.push(value) : newData.push(todo);
+      })
+      localStorage.setItem('todos', JSON.stringify(newData));
     }
   }
 }
